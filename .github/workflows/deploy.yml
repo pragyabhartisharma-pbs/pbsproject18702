@@ -54,10 +54,10 @@ jobs:
       run: terraform plan -input=false
 
     - name: Terraform Apply
-      working-directory: ./Infra
+      working-directory: ./infra
       run: terraform apply -auto-approve tfplan
 
-    - name: Terraform Outputs
-      working-directory: ./infra
-      run: terraform output
+    #- name: Terraform Outputs
+      #working-directory: ./infra
+     # run: terraform output
  
