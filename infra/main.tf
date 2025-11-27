@@ -106,3 +106,50 @@ resource "azurerm_monitor_diagnostic_setting" "diag_kv" {
     enabled  = true
   }
 }
+
+
+# -------------------------
+# Action Group (Alert Receiver)
+# -------------------------
+resource "azurerm_monitor_action_group" "alert_group" {
+  name                = "capstone-action-group"
+  resource_group_name = azurerm_resource_group.rg.name
+  short_name          = "capgrp"
+
+  email_receiver {
+    name          = "emailReceiver"
+    email_address = var.alert_email
+  }
+
+  tags = var.tags
+}
+
+# -------------------------
+# Metric Alert – Storage Availability
+# -------------------------
+resource "azurerm_monitor_metric_alert" "storage_availability_alert" {
+  name                = "storage-availability-alert"
+  resource_group_name = azurerm_resource_group.rg.name
+  scopes              = [azurerm_storage_account.storage.id]
+
+  description         = "Alert when Storage Account availability drops below 99%"
+  severity            = 2
+  frequency           = "PT5M"
+  window_size         = "PT5M"
+  auto_mitigate       = true
+
+  criteria {
+    metric_namespace = "Microsoft.Storage/storageAccounts"
+    metric_name      = "Availability"
+    aggregation      = "Average"
+    operator         = "LessThan"
+    threshold        = 99
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.alert_group.id
+  }
+
+  tags = var.tags
+}
+

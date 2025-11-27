@@ -49,4 +49,4 @@ variable "tags" {
     Environment = "Dev"
   }
 }
-
+variable "alert_email" { type = string }
