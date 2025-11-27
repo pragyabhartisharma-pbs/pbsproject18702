@@ -55,7 +55,6 @@ The GitHub Actions workflow (`deploy.yml`) runs on every push to `main`:
 1. Checkout repository  
 2. Azure login using Service Principal  
 3. Terraform init → validate → plan → apply  
-4. Upload static website files to the `$web` container  
 
 This ensures automated, consistent deployments.
 
@@ -65,13 +64,10 @@ This ensures automated, consistent deployments.
 
 - Secrets stored in **Azure Key Vault**
 - No secrets or credentials in the repository
-- SAS token (short expiry) used for Blob operations
 - Resource tagging for cost tracking:
   - `owner`
   - `env`
   - `cost_center`
-  - `app`
-  - `data_classification`
 - Azure Budget configured to monitor monthly spend
 
 ---
@@ -89,28 +85,21 @@ This ensures automated, consistent deployments.
 
 All required screenshots are available in the `screenshots/` folder:
 
-- Static website deployed  
-- Blob operations  
+- Static website
+- live website SS
 - Key Vault secret  
-- SAS token  
-- Metric alert firing  
+- logs
+- Metric alert 
 - Budget alert  
-- GitHub Actions pipeline run  
-- Resource overview  
+- GitHub Actions pipeline run
+- tags 
+- Resource overview
+- diagnostics
 
 These confirm successful deployment and meet evaluation requirements.
 
 ---
 
-## 📘 Runbook & Lessons Learned
-
-See **RUNBOOK.md** for:
-
-- Deployment steps  
-- Rollback procedure  
-- Secrets handling  
-- Monitoring & alert response  
-- Basic troubleshooting
 
 ### Lessons Learned
 - Terraform enables consistent, repeatable IaC deployments  
@@ -129,7 +118,7 @@ See **RUNBOOK.md** for:
 | Repo (infra + app) | ✔ Completed |
 | Live website | ✔ Available |
 | Pipeline run screenshot | ✔ Included |
-| Blob/KV/SAS proofs | ✔ Included |
+| Blob/KV proofs | ✔ Included |
 | Alert screenshot | ✔ Included |
 | Budget screenshot | ✔ Included |
 | Architecture diagram | ✔ Included |
