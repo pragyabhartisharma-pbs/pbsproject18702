@@ -1,52 +1,27 @@
-
 provider "azurerm" {
-  features {}  
-  subscription_id = "ac6e8c49-833e-427d-bcc4-87042af5ddaf"
+  features {}
+  subscription_id = var.subscription_id
 }
 
 # -------------------------
 # Resource Group
 # -------------------------
-
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name  # Name comes from variables.tf
-  location = var.location             # Location comes from variables.tf
-  tags     = var.tags                 # Tags come from variables.tf
+  name     = var.resource_group_name
+  location = var.location
+  tags     = var.tags
 }
 
 # -------------------------
 # Storage Account for Static Website
 # -------------------------
-
 resource "azurerm_storage_account" "storage" {
   name                     = var.storage_account_name
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
-  account_tier             = "Standard"       # Standard tier storage
-  account_replication_type = "LRS"            # Locally redundant storage
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
   tags                     = var.tags
-}
-
-
-
-resource "azurerm_storage_account_static_website" "static_website" {
-  storage_account_id = azurerm_storage_account.storage.id
-  index_document     = "index.html"
-  error_404_document = "index.html"
-}
-
-
-
-# -------------------------
-# Upload index.html to static website
-# -------------------------
-resource "azurerm_storage_blob" "index_html" {
-  name                   = "index.html"                           # File name in Azure
-  storage_account_name   = azurerm_storage_account.storage.name   # Storage account created above
-  storage_container_name = "$web"                                  # Must be $web for static website
-  type                   = "Block"                                 # Block blob type
-  source                 = "../app/index.html"                         # Path to your local index.html
-  content_type           = "text/html" 
 }
 
 
@@ -57,24 +32,44 @@ data "azurerm_storage_account" "storage_data" {
 
 
 
+#Static Website
+resource "azurerm_storage_account_static_website" "static_website" {
+  storage_account_id = azurerm_storage_account.storage.id
+  index_document     = "index.html"
+  error_404_document = "index.html"
+}
+
+# -------------------------
+# Upload index.html to $web container
+# -------------------------
+resource "azurerm_storage_blob" "index_html" {
+  name                   = "index.html"
+  storage_account_name   = azurerm_storage_account.storage.name
+  storage_container_name = "$web"
+  type                   = "Block"
+  source                 = "../app/index.html"
+  content_type           = "text/html"
+}
+
 # -------------------------
 # Key Vault
-# --------------------------
+# -------------------------
 data "azurerm_client_config" "current" {}
+
 resource "azurerm_key_vault" "kv" {
-  name                        = var.keyvault_name
-  location                    = azurerm_resource_group.rg.location
-  resource_group_name         = azurerm_resource_group.rg.name
-  tenant_id                   = data.azurerm_client_config.current.tenant_id  # Who owns the vault
-  sku_name                    = "standard"
-  purge_protection_enabled    = false
-  tags                        = var.tags
+  name                     = var.keyvault_name
+  location                 = azurerm_resource_group.rg.location
+  resource_group_name      = azurerm_resource_group.rg.name
+  tenant_id                = data.azurerm_client_config.current.tenant_id
+  sku_name                 = "standard"
+  purge_protection_enabled = false
+  tags                     = var.tags
 }
+
 
 # -------------------------
 # Log Analytics Workspace
 # -------------------------
-
 resource "azurerm_log_analytics_workspace" "log" {
   name                = var.log_analytics_name
   location            = azurerm_resource_group.rg.location
@@ -84,3 +79,30 @@ resource "azurerm_log_analytics_workspace" "log" {
   tags                = var.tags
 }
 
+# -------------------------
+# Correct Diagnostics for Storage Account
+# -------------------------
+resource "azurerm_monitor_diagnostic_setting" "diag_storage" {
+  name                       = "storage-diagnostics"
+  target_resource_id         = azurerm_storage_account.storage.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log.id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+# -------------------------
+# Correct Diagnostics for Key Vault
+# -------------------------
+resource "azurerm_monitor_diagnostic_setting" "diag_kv" {
+  name                       = "kv-diagnostics"
+  target_resource_id         = azurerm_key_vault.kv.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log.id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}

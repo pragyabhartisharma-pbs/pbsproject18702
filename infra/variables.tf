@@ -12,6 +12,12 @@ variable "location" {
   default     = "Central India"
 }
 
+# subscription id
+variable "subscription_id" {
+  description = "Azure Subscription ID"
+  type        = string
+}
+
 # Storage account name 
 variable "storage_account_name" {
   description = "Name of Azure Storage Account"
